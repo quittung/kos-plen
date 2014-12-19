@@ -42,4 +42,4 @@ Q: My plane quickly banks from one side to another and is unable to stay on cour
 A: The bank control is not really suited for planes with great bank authority. Will be fixed soonish.
 
 Q: I tried to the auto land function, but my plane crashed into the terrain.  
-A: Until the plane reaches the first waypoint ("MOD" in the upper left corner is greater than 2) you are responsible for setting altitude and speed. Try to use a least 2000 as altitude setpoint.
+A: Until the plane reaches the first waypoint ("MOD" in the upper left corner is smaller than 2) you are responsible for setting altitude and speed. Try to use a least 2000 as altitude setpoint.
