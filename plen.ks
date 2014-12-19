@@ -188,6 +188,7 @@ until false {
 
 	//keeping a track of reality
 	set dt to TIME:SECONDS - t0.
+	SET t0 TO TIME:SECONDS.
 	
 	set v_acc to (airspeed - v_spd) / dt.
 	set v_spd to airspeed.
@@ -409,6 +410,5 @@ until false {
 //--------------------------------------------------
 
  //wrapping up   
-    SET t0 TO TIME:SECONDS.
     WAIT 0.1.
 }
