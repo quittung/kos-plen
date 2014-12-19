@@ -21,8 +21,11 @@ Having great bank authority (ability to change bank angle quickly) currently can
 I will fix that problem soon.
 Also, the take-off procedure may not be compatible with your plane.
 
-### Usage:
+### Installation:
 - Copy "plen.ks" to your "[KSP-Folder]\Ships\Scripts" folder. You can give the file a different name if you want.
+- If you need a plane that is guaranteed to work with the plen copy "p-4.craft" to your "[KSP-Folder]\Ships\SPH" folder.
+
+### Usage:
 - Load a plane with a SCS-module (kOS computer) to the runway.
 - Start the autopilot by typing 
     run plen.
