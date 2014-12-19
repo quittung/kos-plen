@@ -1,9 +1,6 @@
-//TODO
-//dampen error pick up.
-
 //setup
 clearscreen.
-print "plen aplot".
+print "Welcome to plen".
 
 print "Loading waypoints.".
 set tgt to latlng(20.5829,-146.5116).
@@ -11,10 +8,98 @@ set rnwy to latlng(-0.0486,-74.60).
 set ils1 to latlng(-0.0486,-75.5).
 set ils2 to latlng(-0.0486,-78).
 
+//---------------------------------------
+
+print "Setting up data collection".
+SET t0 TO TIME:SECONDS.
+set missionstart to t0.
+lock met to (time:seconds - missionstart).
 
 
+set v_spd to 0.
+set v_hdg to 90.
+set v_bank to 0.
+set v_pitch to 15.
 
-//max 50,35 (c,l)
+lock v_stb to ship:facing * r(0,90,0).
+
+//---------------------------------------
+
+print "Initializing PID.".
+//range: error range in which loop will use less than full deflection
+//max: full deflection
+
+//p(itch): alt-vsp(-ptc-)prt-aileron
+set p_alt_setpoint to 1000.
+set p_alt_range to 100.
+set p_vsp_max to 10.
+set p_vsp_range to 5.
+set p_prt_max to 3.
+set p_prt_range to 10.
+set p_ail_max to 1.
+set p_prt_I to 0.
+
+set s_I to 0. //speed -> thrust
+set b_I to 0. //bank -> roll
+set c_I to 0. //climb -> pitch
+
+set s_lasterror to 0.
+set b_lasterror to 0.
+set c_lasterror to 0.
+
+//---------------------------------------
+
+print "Setting up PID.".
+
+set heading_setpoint to 90.
+set altitude_setpoint to 1000.
+set b_max to 25.
+set c_max to 25.
+
+set s_setpoint to 180.
+set b_setpoint to 0.
+set c_setpoint to 15.
+set heading_bearing to 0.
+
+set s_ku to 0.2.
+set s_tu to 20.
+set s_kp to s_ku * 0.5.
+set s_ki to (s_ku * 1.2 ) / s_tu.
+set s_kd to 0.
+
+
+set b_ku to 0.05.
+set b_tu to 2.
+set b_kp to b_ku * 0.5.
+set b_ki to 0.//(b_ku * 1.2 ) / b_tu.
+set b_kd to (b_kp * b_tu) / 8.
+
+//---------------------------------------
+
+print "Initializing PID.".
+//range: error range in which loop will use less than full deflection
+//max: full deflection
+
+//p(itch): alt-vsp(-ptc-)prt-aileron
+set p_alt_setpoint to 1000.
+set p_alt_range to 100.
+set p_vsp_max to 10.
+set p_vsp_range to 5.
+set p_prt_max to 3.
+set p_prt_range to 10.
+set p_ail_max to 1.
+set p_prt_I to 0.
+
+set s_I to 0. //speed -> thrust
+set b_I to 0. //bank -> roll
+set c_I to 0. //climb -> pitch
+
+set s_lasterror to 0.
+set b_lasterror to 0.
+set c_lasterror to 0.
+
+//---------------------------------------
+
 print "Setting up User input.".
 
 set landing to false.
@@ -46,88 +131,13 @@ set ag8_changed to false.
 set ag9_changed to false.
 set ag10_changed to false.
 
-print "Setting up IMU".
-SET t0 TO TIME:SECONDS.
-set missionstart to t0.
-lock met to (time:seconds - missionstart).
+//---------------------------------------
 
-
-set v_spd to 0.
-set v_hdg to 90.
-set v_bank to 0.
-set v_pitch to 15.
-
-lock v_stb to ship:facing * r(0,90,0).
-
-print "Initializing PID.".
-//range: error range in which loop will use less than full deflection
-//max: full deflection
-
-//p(itch): alt-vsp(-ptc-)prt-aileron
-set p_alt_setpoint to 1000.
-set p_alt_range to 100.
-set p_vsp_max to 10.
-set p_vsp_range to 5.
-set p_prt_max to 3.
-set p_prt_range to 10.
-set p_ail_max to 1.
-set p_prt_I to 0.
-
-set s_I to 0. //speed -> thrust
-set b_I to 0. //bank -> roll
-set c_I to 0. //climb -> pitch
-
-set s_lasterror to 0.
-set b_lasterror to 0.
-set c_lasterror to 0.
-
-//---------------------------------------------
-print "Setting up PID.".
-
-set heading_setpoint to 90.
-set altitude_setpoint to 1000.
-set b_max to 25.
-set c_max to 25.
-
-set s_setpoint to 180.
-set b_setpoint to 0.
-set c_setpoint to 15.
-set heading_bearing to 0.
-
-set s_ku to 0.2.
-set s_tu to 20.
-set s_kp to s_ku * 0.5.
-set s_ki to (s_ku * 1.2 ) / s_tu.
-set s_kd to 0.
-
-
-set b_ku to 0.05.
-set b_tu to 2.
-set b_kp to b_ku * 0.5.
-set b_ki to 0.//(b_ku * 1.2 ) / b_tu.
-set b_kd to (b_kp * b_tu) / 8.
-
-set c_ku to 0.04.
-set c_tu to 3.2.
-set c_kp to c_ku * 0.5.
-set c_ki to (c_ku * 1.2 ) / c_tu.
-set c_kd to (c_kp * c_tu) / 8.
-
-set c_I_limit to 1.2.
-
-print "Setting up triggers.".
-
-when (altitude > 1000) then {set p_setpoint to 5.8.}.
-//when (met > 50) then {set b_setpoint to 35.}.
-//when (met > 70) then {set b_setpoint to 0.}.
-
-
-
-
+print "Setup complete".
 wait 0.25.
 
 
-if not (command_mode = 0) {
+if not ((command_mode = 0) and (altitude < 500)){
 	stage.
 	lock throttle to 1.
 	lock steering to heading(90,3).
@@ -142,15 +152,13 @@ if not (command_mode = 0) {
 	lock steering to heading(90,3).
 	wait 3.
 	unlock steering.
-	set c_setpoint to verticalspeed.
 }.
 
 
-//################################################################
-//loop
+//######################################################################################################
 
 
-print "starting loop".
+print "Starting loop".
 
 until false {
 	//tracking actiongroups
@@ -175,6 +183,8 @@ until false {
 	set ag8_last to ag8.
 	set ag9_last to ag9.
 	set ag10_last to ag10.
+	
+//---------------------------------------
 
 	//keeping a track of reality
 	set dt to TIME:SECONDS - t0.
@@ -196,9 +206,9 @@ until false {
 
 	set v_bank to vang(v_stb:vector, up:vector) - 90.
 	
+//---------------------------------------
 
-
-//User input.
+	//Processing user input.
 	if ag7_changed {
 		toggle ap_refresh. 
 		toggle ag7_changed.
@@ -241,6 +251,8 @@ until false {
 		if ag4_changed {set b_max to b_max - 5. toggle ag4_changed.}.
 	}.
 
+//---------------------------------------
+
 	//drawing GUI
 	clearscreen.
 
@@ -281,12 +293,11 @@ until false {
 	}.
 
 	
-	//landing
-//	if 
+	
 
 //--------------------------------------------------
-	//pid
-	
+
+	//landing
 	if (command_mode = 2) and ap_refresh {
 		if ap_mode = 0 {
 			set heading_setpoint to tgt:heading.
@@ -326,6 +337,10 @@ until false {
 		}.
 	}.
 	
+//--------------------------------------------------
+
+	//Error processing: This is where the magic happens.
+	
 	set heading_b1 to (heading_setpoint - v_hdg).
 	set heading_b2 to (-360 +  heading_setpoint - v_hdg).
 	set heading_b3 to (+360 -  v_hdg + heading_setpoint).
@@ -357,15 +372,7 @@ until false {
 	
 	set c_command to (p_prt_error / (2 * p_prt_range)) + (p_prt_I / (20 * p_prt_range)) . 
 
-//	if abs(altitude_command - c_setpoint) > 3 {
-//		set c_setpoint to c_setpoint + (altitude_command - c_setpoint) / 15. //apply directly to error.
-//	} else {
-//		set c_setpoint to altitude_command.
-//	}.
-	
-	
-	
-	
+	//PID loops handling bank and throttle.
 	set s_error to s_setpoint - v_spd.
 	set b_error to b_setpoint - v_bank.
 	
@@ -390,15 +397,16 @@ until false {
 	set s_command TO s_kp * s_P + s_ki * s_I + s_kd * s_D.
 	set b_command TO b_kp * b_P + b_ki * b_I + b_kd * b_D.
 	
-	
+//--------------------------------------------------
 
-//output
+	//output
 	if not(command_mode = 0) {
 		set ship:control:pitch to c_command.
 		set ship:control:roll to b_command.
 		lock throttle to s_command.
 	}.
 
+//--------------------------------------------------
 
  //wrapping up   
     SET t0 TO TIME:SECONDS.
