@@ -13,7 +13,6 @@ Features:
   - Maintain given heading, altitude and speed.
   - Fly to waypoint.
   - "ILS" auto land.
-  - 
 
 
 !!! WARNING !!! 
@@ -35,11 +34,11 @@ Usage:
 
 
 FAQ:
-Q: I tried to use the Action Groups to control the autopilot, but nothing happened.
+Q: I tried to use the Action Groups to control the autopilot, but nothing happened.  
 A: Make sure the kOS window is not focused (should be transparent). Also wait until the plane reaches 500m and the screen changes.
 
-Q: My plane quickly banks from one side to another and is unable to stay on course.
+Q: My plane quickly banks from one side to another and is unable to stay on course.  
 A: The bank control is not really suited for planes with great bank authority. Will be fixed soonish.
 
-Q: I tried to the auto land function, but my plane crashed into the terrain. 
+Q: I tried to the auto land function, but my plane crashed into the terrain.  
 A: Until the plane reaches the first waypoint ("MOD" in the upper left corner is greater than 2) you are responsible for setting altitude and speed. Try to use a least 2000 as altitude setpoint.
