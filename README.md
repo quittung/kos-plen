@@ -17,9 +17,7 @@ Attempt at an autopilot script for planes running kOS in Kerbal Space Program
 
 
 ### !!! WARNING !!! 
-Having great bank authority (ability to change bank angle quickly) currently can lead to the plane spinning out of control.
-I will fix that problem soon.
-Also, the take-off procedure may not be compatible with your plane.
+The take-off procedure may not be compatible with your plane.
 
 ### Installation:
 - Copy "plen.ks" to your "[KSP-Folder]\Ships\Scripts" folder. You can give the file a different name if you want.
@@ -40,9 +38,6 @@ Also, the take-off procedure may not be compatible with your plane.
 ### FAQ:
 Q: I tried to use the Action Groups to control the autopilot, but nothing happened.  
 A: Make sure the kOS window is not focused (should be transparent). Also wait until the plane reaches 500m and the screen changes.
-
-Q: My plane quickly banks from one side to another and is unable to stay on course.  
-A: The bank control is not really suited for planes with great bank authority. Will be fixed soonish.
 
 Q: I tried to the auto land function, but my plane crashed into the terrain.  
 A: Until the plane reaches the first waypoint ("MOD" in the upper left corner is smaller than 2) you are responsible for setting altitude and speed. Try to use a least 2000 as altitude setpoint.
