@@ -347,8 +347,20 @@ until false {
 	if p_prt_I > p_prt_range {set p_prt_I to p_prt_range.}. //FINETUNE AND IMPLEMENT
 	if p_prt_I < -p_prt_range {set p_prt_I to -p_prt_range.}.
 	
-	set c_command to (p_prt_error / (2 * p_prt_range)) + (p_prt_I / (20 * p_prt_range)) . 
+	set c_command to (p_prt_error / (2 * p_prt_range)) + (p_prt_I / (p_prt_range)) . //Maybe not quite... (Undershoots) 
 	
+	if (true) {
+	print "p_alt_setpoint " + round(p_alt_setpoint,2) at (15,15).
+	print "p_vsp_setpoint " + round(p_vsp_setpoint,2) at (15,16).
+	print "p_prt_setpoint " + round(p_prt_setpoint,2) at (15,17).
+	print "p_alt_error " + round(p_alt_error,2) at (15,18).
+	print "p_vsp_error " + round(p_vsp_error,2) at (15,19).
+	print "p_prt_error " + round(p_prt_error,2) at (15,20).
+	print "v_alt " + round(v_alt,2) at (15,21).
+	print "v_pitch " + round(v_pitch,2) at (15,22).
+	print "v_angv_p " + round(v_angv_p,2) at (15,23).
+	print "p_prt_I " + round(p_prt_I,2) at (15,24).
+	}.
 	
 	//Bank control
 	set heading_b1 to (b_hdg_setpoint - v_hdg).
