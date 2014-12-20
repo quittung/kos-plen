@@ -1,18 +1,37 @@
+//table of contents:
+//setup
+//	loading waypoints
+//	setting up data collection
+//	setting up PID
+//	initializing PID
+//	setting up User input
+//	takeoff procedure
+//
+//loop
+//	tracking actiongroups
+//	accumulating sensor data
+//	processing user input
+//	drawing GUI
+//	landing procedures
+//	error processing
+//	output
+
+
 //setup
 clearscreen.
 print "Welcome to plen".
 
-print "Loading waypoints.".
-set tgt to latlng(20.5829,-146.5116).
-set rnwy to latlng(-0.0486,-74.60).
-set ils1 to latlng(-0.0486,-75.5).
-set ils2 to latlng(-0.0486,-78).
+print "Loading waypoints.". 			//Waypoints that are used for automatic navigation.
+set tgt to latlng(20.5829,-146.5116).	//enter custom waypoint here
+set rnwy to latlng(-0.0486,-74.60).		//saved runway location
+set ils1 to latlng(-0.0486,-75.5).		//waypoint used to initiate final approach
+set ils2 to latlng(-0.0486,-78).		//waypoint used for initial alignment with runway
 
 //---------------------------------------
 
-print "Setting up data collection".
-SET t0 TO TIME:SECONDS.
-set missionstart to t0.
+print "Setting up data collection". 	//initiating some variables that are used to calculate deriviative sensor data like angular velocity.
+SET t0 TO TIME:SECONDS.  				//used for loop cycle duration calculation
+set missionstart to t0.					//program start time.
 lock met to (time:seconds - missionstart).
 
 
@@ -21,15 +40,15 @@ set v_hdg to 90.
 set v_bank to 0.
 set v_pitch to 3.
 
-lock v_stb to ship:facing * r(0,90,0).
+lock v_stb to ship:facing * r(0,90,0). 	//Vector needed to calculate bank angle. (See "Accumulating sensor data" in the loop.)
 
 //---------------------------------------
 
-print "Setting up PID.".
+print "Setting up PID.".				//tune control loops here
 //range: error range in which loop will pass less than max
 //max: max value to be passed on
 
-//p(itch): alt-verticalspeed-pitchrate-elevator
+//p(itch): alt->verticalspeed->pitchrate->elevator
 set p_alt_setpoint to 1000.
 set p_alt_range to 100.
 set p_vsp_max to 10.
@@ -38,7 +57,7 @@ set p_prt_max to 3.
 set p_prt_range to 10.
 set p_elv_max to 1.
 
-//b(ank): hdg-bank-bankrate-aileron
+//b(ank): hdg->bank->bankrate->aileron
 set b_hdg_setpoint to 90.
 set b_hdg_range to 15.
 set b_bnk_max to 30.
@@ -47,14 +66,7 @@ set b_brt_max to 10.
 set b_brt_range to 10.
 set b_ail_max to 1.
 
-set heading_setpoint to 90.
-set altitude_setpoint to 1000.
-set b_max to 25.
-set c_max to 25.
-
 set s_setpoint to 180.
-set b_setpoint to 0.
-set c_setpoint to 15.
 set heading_bearing to 0.
 
 set s_ku to 0.2.
@@ -63,36 +75,26 @@ set s_kp to s_ku * 0.5.
 set s_ki to (s_ku * 1.2 ) / s_tu.
 set s_kd to 0.
 
-
-set b_ku to 0.05.
-set b_tu to 2.
-set b_kp to b_ku * 0.5.
-set b_ki to 0.//(b_ku * 1.2 ) / b_tu.
-set b_kd to (b_kp * b_tu) / 8.
-
 //---------------------------------------
 
-print "Initializing PID.".
+print "Initializing PID.".				//Setting incremental errors to 0.
 
-set s_I to 0. //speed -> thrust
-set b_I to 0. //bank -> roll
-
+set s_I to 0. 
 set p_prt_I to 0.
 set b_brt_I to 0.
 
 set s_lasterror to 0.
-set b_lasterror to 0.
 
 //---------------------------------------
 
 print "Setting up User input.".
 
-set landing to false.
-set landing_step to 3.
-set ap_mode to 0. //waypoint or landing.
-set ap_refresh to false. //read heading.
-set input_mode to 0. //setpoints or change rates
-set command_mode to 1. //manual guidance, manual direction or automatic mode.
+set landing to false.					//boolean: overrides altitude control while flaring
+set landing_step to 3.					//int: used to keep track of landing progress. decrements from 3 (approaching ILS-2) to 0 (flaring).
+set ap_mode to 0. 						//int: waypoint or landing mode (AG 8)
+set ap_refresh to false. 				//boolean: determining whether plen updates bearing to target (AG 7)
+set input_mode to 0. 					//int: input setpoints or change rates (AG 0)
+set command_mode to 1. 					//int: manual guidance, manual direction or automatic mode. (AG 9)
 
 set ag1_last to ag1.
 set ag2_last to ag2.
@@ -122,7 +124,7 @@ print "Setup complete".
 wait 0.25.
 
 
-if not ((command_mode = 0) and (altitude < 500)){
+if not ((command_mode = 0) and (altitude < 500)){ //very crude takeoff procedure
 	stage.
 	lock throttle to 1.
 	lock steering to heading(90,3).
@@ -147,9 +149,9 @@ print "Starting loop".
 
 until false {
 	//tracking actiongroups
-	if not (ag1 = ag1_last) {set ag1_changed to true.}.
-	if not (ag2 = ag2_last) {set ag2_changed to true.}.
-	if not (ag3 = ag3_last) {set ag3_changed to true.}.
+	if not (ag1 = ag1_last) {set ag1_changed to true.}.  //user intput is implemented by tracking
+	if not (ag2 = ag2_last) {set ag2_changed to true.}.  //whether an action group has been changed
+	if not (ag3 = ag3_last) {set ag3_changed to true.}.  //since the last loop cycle
 	if not (ag4 = ag4_last) {set ag4_changed to true.}.
 	if not (ag5 = ag5_last) {set ag5_changed to true.}.
 	if not (ag6 = ag6_last) {set ag6_changed to true.}.
@@ -158,7 +160,7 @@ until false {
 	if not (ag9 = ag9_last) {set ag9_changed to true.}.
 	if not (ag10 = ag10_last) {set ag10_changed to true.}.
 
-	set ag1_last to ag1.
+	set ag1_last to ag1.  //keeping track of current action group status for comparison in next loop cycle
 	set ag2_last to ag2.
 	set ag3_last to ag3.
 	set ag4_last to ag4.
@@ -171,31 +173,32 @@ until false {
 	
 //---------------------------------------
 
-	//keeping a track of reality
-	set dt to TIME:SECONDS - t0.
+	//Accumulating sensor data
+	set dt to TIME:SECONDS - t0. //calculating loop cycle duration
 	SET t0 TO TIME:SECONDS.
 	
 	set v_acc to (airspeed - v_spd) / dt.
 	set v_spd to airspeed.
 	
-	set v_aoa to vang(facing:vector,velocity:surface).
-	set v_angv_p to ((90 - vang(up:vector,facing:vector)) - v_pitch) / dt.
-	set v_pitch to (90 - vang(up:vector,facing:vector)).
-
-	set v_angv_y to ((facing:pitch + 90) - v_hdg) / dt.
-	set v_hdg to latlng(90,0):bearing.
-	if v_hdg < 0 {set v_hdg to abs(v_hdg).} else {set v_hdg to 180 + (180 - v_hdg).}.
-
-
 	set v_alt to altitude.
 	set v_vspd to verticalspeed.
+	
+	set v_angv_x to ((90 - vang(up:vector,facing:vector)) - v_pitch) / dt. 				//angular velocity on pitch axis
+	set v_pitch to (90 - vang(up:vector,facing:vector)). 								//current pitch
 
-	set v_angv_z to ((vang(v_stb:vector, up:vector) - 90) - v_bank) / dt.
-	set v_bank to vang(v_stb:vector, up:vector) - 90.
+	set v_angv_y to ((facing:pitch + 90) - v_hdg) / dt. 								//angular velocity on yaw axis (not reliable)
+	set v_hdg to latlng(90,0):bearing. 													//current bearing to north pole.
+	if v_hdg < 0 {set v_hdg to abs(v_hdg).} else {set v_hdg to 180 + (180 - v_hdg).}. 	//converting that bearing into plane heading.
+
+	set v_angv_z to ((vang(v_stb:vector, up:vector) - 90) - v_bank) / dt.				//angular velocity on roll axis
+	set v_bank to vang(v_stb:vector, up:vector) - 90.									//current bank angle
+	
+	set v_aoa to vang(facing:vector,velocity:surface). 									//current deviation from surface velocity vector; 
+																						//combines aoa and sideslip, always positive
 	
 //---------------------------------------
 
-	//Processing user input.
+	//Processing user input. always toggle ag#_changed after processing 
 	if ag7_changed {
 		toggle ap_refresh. 
 		toggle ag7_changed.
@@ -220,7 +223,7 @@ until false {
 	}.
 	if input_mode > 1 {set input_mode to 0.}.
 	
-	if input_mode = 0 {
+	if input_mode = 0 { 
 		if ag1_changed {set s_setpoint to s_setpoint + 10. toggle ag1_changed.}.
 		if ag2_changed {set s_setpoint to s_setpoint - 10. toggle ag2_changed.}.
 		if ag3_changed {set p_alt_setpoint to p_alt_setpoint + 100. toggle ag3_changed.}.
@@ -284,14 +287,13 @@ until false {
 
 //--------------------------------------------------
 
-	//landing
+	//landing procedure. gets current state from landing_step and manipulates setpoints in order to land the plane
 	if (command_mode = 2) and ap_refresh {
 		if ap_mode = 0 {
 			set b_hdg_setpoint to tgt:heading.
 		} else {
 			if landing_step = 3 {
 				set b_hdg_setpoint to ils2:heading.
-//				set p_alt_setpoint to 2000.
 				if ils2:distance < (1000 + ALT:RADAR) {
 					
 					set landing_step to landing_step - 1.
@@ -339,7 +341,7 @@ until false {
 	if p_vsp_error < -p_vsp_range {set p_vsp_error to -p_vsp_range.}.
 	set p_prt_setpoint to (p_vsp_error / p_vsp_range) * p_prt_max. 
 	
-	set p_prt_error to p_prt_setpoint - v_angv_p.
+	set p_prt_error to p_prt_setpoint - v_angv_x.
 	if p_prt_error > p_prt_range {set p_prt_error to p_prt_range.}.
 	if p_prt_error < -p_prt_range {set p_prt_error to -p_prt_range.}.
 	
@@ -349,7 +351,7 @@ until false {
 	
 	set c_command to (p_prt_error / (2 * p_prt_range)) + (p_prt_I / (p_prt_range)) . //Maybe not quite... (Undershoots) 
 	
-	if (true) {
+	if (false) {
 	print "p_alt_setpoint " + round(p_alt_setpoint,2) at (15,15).
 	print "p_vsp_setpoint " + round(p_vsp_setpoint,2) at (15,16).
 	print "p_prt_setpoint " + round(p_prt_setpoint,2) at (15,17).
@@ -358,7 +360,7 @@ until false {
 	print "p_prt_error " + round(p_prt_error,2) at (15,20).
 	print "v_alt " + round(v_alt,2) at (15,21).
 	print "v_pitch " + round(v_pitch,2) at (15,22).
-	print "v_angv_p " + round(v_angv_p,2) at (15,23).
+	print "v_angv_x " + round(v_angv_x,2) at (15,23).
 	print "p_prt_I " + round(p_prt_I,2) at (15,24).
 	}.
 	
@@ -420,7 +422,7 @@ until false {
 	
 //--------------------------------------------------
 
-	//output
+	//output: applying calculated commands to plane surfaces
 	if not(command_mode = 0) {
 		set ship:control:pitch to c_command.
 		set ship:control:roll to b_command.
@@ -429,6 +431,6 @@ until false {
 
 //--------------------------------------------------
 
- //wrapping up   
+ //wrapping up: probably not necessary, helps with gui flickering
     WAIT 0.1.
 }
