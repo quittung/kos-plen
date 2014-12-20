@@ -26,9 +26,9 @@ The take-off procedure may not be compatible with your plane.
 ### Usage:
 - Load a plane with a SCS-module (kOS computer) to the runway.
 - Open the terminal from the SCS part menu.
-- Start the autopilot by typing 
-    run plen.
-- The autopilot will now "safely and reliably" launch your plane and bring it up to an altitude of about 500 m ASL.
+- Start the autopilot by typing  
+    run plen.  
+- The autopilot will now "safely and reliably" launch your plane and bring it up to an altitude of about 500m ASL.
 - The autopilot will now transition into closed loop guidance which allows you to enter your flight parameters using Action Groups:  
      AG 1 - 6: Set altitude, heading, speed, climb rate and max bank.  
      AG 7 - 9: Used to change what the autopilot thinks it should do.  
