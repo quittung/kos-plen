@@ -46,6 +46,6 @@ A: Until the plane reaches the first waypoint ("MOD" in the upper left corner is
 Q: The screen is flickering.  
 A: Increase the IPU in the kOS menu ingame. This issue is caused by the script not being able to clear and redraw the entire screen within a single frame. This is because kOS artificially restricts the processing power of the scriptable control system (SCS), increasing the IPU to about 500 allows the redrawing to happen within a frame.
 
-Q: File "plen" not found!
+Q: File "plen" not found!  
 A: kOS could not find the script. Make sure "plen.ks" is in your "[KSP-Folder]\Ships\Scripts" folder.  
 kOS might be looking in the wrong place. Try typing "switch to archive.", without the quotes. If that worked, you can instruct kOS to start in the right directory by default by activating the "ARCH" button in the ingame kOS menu.
