@@ -28,10 +28,10 @@ The take-off procedure may not be compatible with your plane.
 - Start the autopilot by typing 
     run plen.
 - The autopilot will now "safely and reliably" launch your plane and bring it up to an altitude of about 500 m ASL.
-- The autopilot will now transition into closed loop guidance which allows you to enter your flight parameters using Action Groups:
-    AG 1 - 6: Set altitude, heading, speed, climb rate and max bank.
-    AG 7 - 9: Used to change what the autopilot thinks it should do.
-    AG 0:     Switch between changing alt, hdg, spd and climb rate and bank max.
+- The autopilot will now transition into closed loop guidance which allows you to enter your flight parameters using Action Groups:  
+      AG 1 - 6: Set altitude, heading, speed, climb rate and max bank.  
+     AG 7 - 9: Used to change what the autopilot thinks it should do.  
+     AG 0:     Switch between changing alt, hdg, spd and climb rate and bank max.  
 - To start the ILS auto land, toggle all of AG 7 - 9 once. It will now fly to the mountains west of the KSC and start to align itself with the runway from there. Set altitude as needed in order to avoid terrain until the plane has reached its first waypoint.
 
 
