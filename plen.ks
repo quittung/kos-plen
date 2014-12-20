@@ -19,37 +19,33 @@ lock met to (time:seconds - missionstart).
 set v_spd to 0.
 set v_hdg to 90.
 set v_bank to 0.
-set v_pitch to 15.
+set v_pitch to 3.
 
 lock v_stb to ship:facing * r(0,90,0).
 
 //---------------------------------------
 
-print "Initializing PID.".
-//range: error range in which loop will use less than full deflection
-//max: full deflection
+print "Setting up PID.".
+//range: error range in which loop will pass less than max
+//max: max value to be passed on
 
-//p(itch): alt-vsp(-ptc-)prt-aileron
+//p(itch): alt-verticalspeed-pitchrate-elevator
 set p_alt_setpoint to 1000.
 set p_alt_range to 100.
 set p_vsp_max to 10.
 set p_vsp_range to 5.
 set p_prt_max to 3.
 set p_prt_range to 10.
-set p_ail_max to 1.
-set p_prt_I to 0.
+set p_elv_max to 1.
 
-set s_I to 0. //speed -> thrust
-set b_I to 0. //bank -> roll
-set c_I to 0. //climb -> pitch
-
-set s_lasterror to 0.
-set b_lasterror to 0.
-set c_lasterror to 0.
-
-//---------------------------------------
-
-print "Setting up PID.".
+//b(ank): hdg-bank-bankrate-aileron
+set b_hdg_setpoint to 90.
+set b_hdg_range to 15.
+set b_bnk_max to 30.
+set b_bnk_range to 10.
+set b_brt_max to 10.
+set b_brt_range to 10.
+set b_ail_max to 1.
 
 set heading_setpoint to 90.
 set altitude_setpoint to 1000.
@@ -77,26 +73,15 @@ set b_kd to (b_kp * b_tu) / 8.
 //---------------------------------------
 
 print "Initializing PID.".
-//range: error range in which loop will use less than full deflection
-//max: full deflection
-
-//p(itch): alt-vsp(-ptc-)prt-aileron
-set p_alt_setpoint to 1000.
-set p_alt_range to 100.
-set p_vsp_max to 10.
-set p_vsp_range to 5.
-set p_prt_max to 3.
-set p_prt_range to 10.
-set p_ail_max to 1.
-set p_prt_I to 0.
 
 set s_I to 0. //speed -> thrust
 set b_I to 0. //bank -> roll
-set c_I to 0. //climb -> pitch
+
+set p_prt_I to 0.
+set b_brt_I to 0.
 
 set s_lasterror to 0.
 set b_lasterror to 0.
-set c_lasterror to 0.
 
 //---------------------------------------
 
@@ -205,6 +190,7 @@ until false {
 	set v_alt to altitude.
 	set v_vspd to verticalspeed.
 
+	set v_angv_z to ((vang(v_stb:vector, up:vector) - 90) - v_bank) / dt.
 	set v_bank to vang(v_stb:vector, up:vector) - 90.
 	
 //---------------------------------------
@@ -239,17 +225,17 @@ until false {
 		if ag2_changed {set s_setpoint to s_setpoint - 10. toggle ag2_changed.}.
 		if ag3_changed {set p_alt_setpoint to p_alt_setpoint + 100. toggle ag3_changed.}.
 		if ag4_changed {set p_alt_setpoint to p_alt_setpoint - 100. toggle ag4_changed.}.
-		if ag5_changed {set heading_setpoint to heading_setpoint + 15. toggle ag5_changed.}.
-		if ag6_changed {set heading_setpoint to heading_setpoint - 15. toggle ag6_changed.}.
+		if ag5_changed {set b_hdg_setpoint to b_hdg_setpoint + 15. toggle ag5_changed.}.
+		if ag6_changed {set b_hdg_setpoint to b_hdg_setpoint - 15. toggle ag6_changed.}.
 		
-		if heading_setpoint > 360 {set heading_setpoint to heading_setpoint - 360.}.
-		if heading_setpoint < 0   {set heading_setpoint to heading_setpoint + 360.}.
+		if b_hdg_setpoint > 360 {set b_hdg_setpoint to b_hdg_setpoint - 360.}.
+		if b_hdg_setpoint < 0   {set b_hdg_setpoint to b_hdg_setpoint + 360.}.
 	}.
 	if input_mode = 1 {
 		if ag1_changed {set p_vsp_max to p_vsp_max + 5. toggle ag1_changed.}.
 		if ag2_changed {set p_vsp_max to p_vsp_max - 5. toggle ag2_changed.}.
-		if ag3_changed {set b_max to b_max + 5. toggle ag3_changed.}.
-		if ag4_changed {set b_max to b_max - 5. toggle ag4_changed.}.
+		if ag3_changed {set b_bnk_max to b_bnk_max + 5. toggle ag3_changed.}.
+		if ag4_changed {set b_bnk_max to b_bnk_max - 5. toggle ag4_changed.}.
 	}.
 
 //---------------------------------------
@@ -272,8 +258,8 @@ until false {
 	print "apref 7 " + ap_refresh at (30,10).
 	print "apcom 8 " + ap_mode at (30,11).
 	print "commod 9 " + command_mode at (30,12).
-	print "div " + (SHIP:GEOPOSITION:LAT + 0.0405) at (30,13).
-	print "dist " + (rnwy:distance) at (30,13).
+	print "div " + round((SHIP:GEOPOSITION:LAT + 0.0405),2) at (30,13).
+	print "dist " + round((rnwy:distance),2) at (30,14).
 	
 	
 
@@ -281,15 +267,15 @@ until false {
 		print "[SPD]      [ALT]    [HDG]" at (4,29).
 		print "[1]        [3]      [5]" at (5,31).
 		print s_setpoint at (5,33).
-		print p_alt_setpoint at (15,33).
-		print heading_setpoint at (25,33).
+		print round(p_alt_setpoint,2) at (15,33).
+		print round(b_hdg_setpoint,2) at (25,33).
 		print "[2]        [4]      [6]" at (5,35).
 	}.
 	if input_mode = 1 {
 		print "[VSP]      [BNK]" at (4,29).
 		print "[1]        [3]" at (5,31).
 		print p_vsp_max at (5,33).
-		print b_max at (15,33).
+		print b_bnk_max at (15,33).
 		print "[2]        [4]" at (5,35).
 	}.
 
@@ -301,10 +287,10 @@ until false {
 	//landing
 	if (command_mode = 2) and ap_refresh {
 		if ap_mode = 0 {
-			set heading_setpoint to tgt:heading.
+			set b_hdg_setpoint to tgt:heading.
 		} else {
 			if landing_step = 3 {
-				set heading_setpoint to ils2:heading.
+				set b_hdg_setpoint to ils2:heading.
 //				set p_alt_setpoint to 2000.
 				if ils2:distance < (1000 + ALT:RADAR) {
 					
@@ -312,12 +298,12 @@ until false {
 				}.
 			}.
 			if landing_step = 2 {
-				set heading_setpoint to 90 + 150 * (SHIP:GEOPOSITION:LAT + 0.0486).
-				if heading_setpoint < 20 {set heading_setpoint to 20.}.
-				if heading_setpoint > 160 {set heading_setpoint to 160.}.
+				set b_hdg_setpoint to 90 + 150 * (SHIP:GEOPOSITION:LAT + 0.0486).
+				if b_hdg_setpoint < 20 {set b_hdg_setpoint to 20.}.
+				if b_hdg_setpoint > 160 {set b_hdg_setpoint to 160.}.
 				set p_alt_setpoint to (rnwy:distance * 0.05).
 				set p_vsp_max to 25.
-				set b_max to 40.
+				set b_bnk_max to 40.
 				set s_setpoint to 180.
 				if ils1:distance < (100 + ALT:RADAR) {
 					set landing_step to landing_step - 1.
@@ -325,13 +311,13 @@ until false {
 				}.
 			}.
 			if landing_step = 1 {
-				set heading_setpoint to 90 + 500 * (SHIP:GEOPOSITION:LAT + 0.0486).
+				set b_hdg_setpoint to 90 + 500 * (SHIP:GEOPOSITION:LAT + 0.0486).
 				set p_alt_setpoint to (rnwy:distance * 0.05).
 				set s_setpoint to 115.
-				set b_max to 100.
+				set b_bnk_max to 40.
 				if ALT:RADAR < (3) {
 					set landing_step to landing_step - 1.
-					set heading_setpoint to 90.
+					set b_hdg_setpoint to 90.
 					set s_setpoint to 0.
 				}.
 			}.
@@ -342,17 +328,7 @@ until false {
 
 	//Error processing: This is where the magic happens.
 	
-	set heading_b1 to (heading_setpoint - v_hdg).
-	set heading_b2 to (-360 +  heading_setpoint - v_hdg).
-	set heading_b3 to (+360 -  v_hdg + heading_setpoint).
-	if abs(heading_b1) < abs(heading_b2) {set heading_bearing to heading_b1.} else {set heading_bearing to heading_b2.}.
-	if abs(heading_bearing) > abs(heading_b3) {set heading_bearing to heading_b3.}.
-	
-	set heading_error to heading_bearing.
-	if heading_error > 15 {set heading_error to 15.}.
-	if heading_error < -15 {set heading_error to -15.}.
-	set b_setpoint to (heading_error / 15) * b_max. 
-	
+	//Pitch control
 	set p_alt_error to p_alt_setpoint - v_alt.
 	if p_alt_error > p_alt_range {set p_alt_error to p_alt_range.}.
 	if p_alt_error < -p_alt_range {set p_alt_error to -p_alt_range.}.
@@ -372,31 +348,63 @@ until false {
 	if p_prt_I < -p_prt_range {set p_prt_I to -p_prt_range.}.
 	
 	set c_command to (p_prt_error / (2 * p_prt_range)) + (p_prt_I / (20 * p_prt_range)) . 
+	
+	
+	//Bank control
+	set heading_b1 to (b_hdg_setpoint - v_hdg).
+	set heading_b2 to (-360 +  b_hdg_setpoint - v_hdg).
+	set heading_b3 to (+360 -  v_hdg + b_hdg_setpoint).
+	if abs(heading_b1) < abs(heading_b2) {set heading_bearing to heading_b1.} else {set heading_bearing to heading_b2.}.
+	if abs(heading_bearing) > abs(heading_b3) {set heading_bearing to heading_b3.}.
+	
+	set heading_error to heading_bearing.
+	if heading_error > b_hdg_range {set heading_error to b_hdg_range.}.
+	if heading_error < -b_hdg_range {set heading_error to -b_hdg_range.}.
+	set b_bnk_setpoint to (heading_error / b_hdg_range) * b_bnk_max. 
+	
+	set b_bnk_error to b_bnk_setpoint - v_bank.
+	if b_bnk_error > b_bnk_range {set b_bnk_error to b_bnk_range.}.
+	if b_bnk_error < -b_bnk_range {set b_bnk_error to -b_bnk_range.}.
+	set b_brt_setpoint to (b_bnk_error / b_bnk_range) * b_brt_max. 
+	
+	set b_brt_error to b_brt_setpoint - v_angv_z.
+	if b_brt_error > b_brt_range {set b_brt_error to b_brt_range.}.
+	if b_brt_error < -b_brt_range {set b_brt_error to -b_brt_range.}.
+	
+	set b_brt_I to b_brt_I + b_brt_error * dt.
+	if b_brt_I > b_brt_range {set b_brt_I to b_brt_range.}. //FINETUNE AND IMPLEMENT
+	if b_brt_I < -b_brt_range {set b_brt_I to -b_brt_range.}.
+	
+	set b_command to (b_brt_error / (2 * b_brt_range)).// + (b_brt_I / (20 * b_brt_range)) . 
+	
+	if (false) {
+	print "b_hdg_setpoint " + round(b_hdg_setpoint,2) at (15,15).
+	print "b_bnk_setpoint " + round(b_bnk_setpoint,2) at (15,16).
+	print "b_brt_setpoint " + round(b_brt_setpoint,2) at (15,17).
+	print "heading_error " + round(heading_error,2) at (15,18).
+	print "b_bnk_error " + round(b_bnk_error,2) at (15,19).
+	print "b_brt_error " + round(b_brt_error,2) at (15,20).
+	print "v_hdg " + round(v_hdg,2) at (15,21).
+	print "v_bank " + round(v_bank,2) at (15,22).
+	print "v_angv_z " + round(v_angv_z,2) at (15,23).
+	print "b_command " + round(b_command,2) at (15,24).
+	}.
+	
 
-	//PID loops handling bank and throttle.
+	//PID loop handling throttle.
 	set s_error to s_setpoint - v_spd.
-	set b_error to b_setpoint - v_bank.
 	
 	set s_P to s_error.
-	set b_P to b_error.
-	
-	
 	set s_I to s_I + s_error * dt.
-	set b_I to b_I + b_error * dt.
-	
 	set s_D to ((s_error) - (s_lasterror)) / dt.
-	set b_D to ((b_error) - (b_lasterror)) / dt.
-	
+
 	set s_lasterror to s_error.
-	set b_lasterror to b_error.
-	
+
 	if (s_I * s_ki) > 1 {set s_i to 1 / s_ki.}.  
 	if (s_I * s_ki) < 0 {set s_i to 0 / s_ki.}.  
-	if (b_I * b_ki) > 1 {set b_i to 1 / b_ki.}.  
-	if (b_I * b_ki) < -1 {set b_i to -1 / b_ki.}.  
-	
+
 	set s_command TO s_kp * s_P + s_ki * s_I + s_kd * s_D.
-	set b_command TO b_kp * b_P + b_ki * b_I + b_kd * b_D.
+
 	
 //--------------------------------------------------
 
