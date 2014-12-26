@@ -95,6 +95,9 @@ set ap_mode to 0. 						//int: waypoint or landing mode (AG 8)
 set ap_refresh to false. 				//boolean: determining whether plen updates bearing to target (AG 7)
 set input_mode to 0. 					//int: input setpoints or change rates (AG 0)
 set command_mode to 1. 					//int: manual guidance, manual direction or automatic mode. (AG 9)
+set command_speed to true.
+set command_hdg to true.
+set command_altitude to true.
 
 set ag1_last to ag1.
 set ag2_last to ag2.
@@ -134,7 +137,7 @@ if not ((command_mode = 0) and (altitude < 500)){ //very crude takeoff procedure
 	print "Rotate!".
 	lock steering to heading(90,15).
 	wait until altitude > 100.
-	toggle gear.
+	set gear to false.
 	wait until altitude > 500.
 	lock steering to heading(90,3).
 	wait 3.
@@ -199,6 +202,7 @@ until false {
 //---------------------------------------
 
 	//Processing user input. always toggle ag#_changed after processing 
+	
 	if ag7_changed {
 		toggle ap_refresh. 
 		toggle ag7_changed.
@@ -217,70 +221,149 @@ until false {
 	}.
 	if command_mode > 2 {set command_mode to 0.}.
 	
-	if ag10_changed {
-		set input_mode to input_mode + 1. 
-		toggle ag10_changed.
-	}.
-	if input_mode > 1 {set input_mode to 0.}.
+	
 	
 	if input_mode = 0 { 
 		if ag1_changed {set s_setpoint to s_setpoint + 10. toggle ag1_changed.}.
 		if ag2_changed {set s_setpoint to s_setpoint - 10. toggle ag2_changed.}.
-		if ag3_changed {set p_alt_setpoint to p_alt_setpoint + 100. toggle ag3_changed.}.
-		if ag4_changed {set p_alt_setpoint to p_alt_setpoint - 100. toggle ag4_changed.}.
-		if ag5_changed {set b_hdg_setpoint to b_hdg_setpoint + 15. toggle ag5_changed.}.
-		if ag6_changed {set b_hdg_setpoint to b_hdg_setpoint - 15. toggle ag6_changed.}.
-		
+	}.
+	if input_mode = 1 { 
+		if ag1_changed {set b_hdg_setpoint to b_hdg_setpoint + 15. toggle ag1_changed.}.
+		if ag2_changed {set b_hdg_setpoint to b_hdg_setpoint - 15. toggle ag2_changed.}.
 		if b_hdg_setpoint > 360 {set b_hdg_setpoint to b_hdg_setpoint - 360.}.
 		if b_hdg_setpoint < 0   {set b_hdg_setpoint to b_hdg_setpoint + 360.}.
 	}.
-	if input_mode = 1 {
+	if input_mode = 2 { 
+		if ag1_changed {set p_alt_setpoint to p_alt_setpoint + 100. toggle ag1_changed.}.
+		if ag2_changed {set p_alt_setpoint to p_alt_setpoint - 100. toggle ag2_changed.}.
+	}.
+	if input_mode = 3 { 
 		if ag1_changed {set p_vsp_max to p_vsp_max + 5. toggle ag1_changed.}.
 		if ag2_changed {set p_vsp_max to p_vsp_max - 5. toggle ag2_changed.}.
-		if ag3_changed {set b_bnk_max to b_bnk_max + 5. toggle ag3_changed.}.
-		if ag4_changed {set b_bnk_max to b_bnk_max - 5. toggle ag4_changed.}.
 	}.
+	if input_mode = 4 { 
+		if ag1_changed {set b_bnk_max to b_bnk_max + 5. toggle ag1_changed.}.
+		if ag2_changed {set b_bnk_max to b_bnk_max - 5. toggle ag2_changed.}.
+	}.
+	
+	if ag3_changed {
+		set input_mode to input_mode - 1. 
+		toggle ag3_changed.
+	}.
+	if ag4_changed {
+		set input_mode to input_mode + 1. 
+		toggle ag4_changed.
+	}.
+	if input_mode > 4 {set input_mode to 0.}.
+	if input_mode < 0 {set input_mode to 4.}.
+	
+	if (command_mode = 0) {
+		set command_speed to false.
+		set command_hdg to false.
+		set command_altitude to false.
+	} else {
+		set command_speed to true.
+		set command_hdg to true.
+		set command_altitude to true.
+	}.
+	
 
 //---------------------------------------
 
 	//drawing GUI
 	clearscreen.
 
-	print "SPD " + round(v_spd,2) at (30,0).
-	print "HGT " + round(v_alt,2) at (30,2).
-	print "HDG " + round(v_hdg,2) at (30,5).
-	print "PIT " + round(v_pitch,2) at (30,6).
-	print "BNK " + round(v_bank, 2) at (30,7).
+	print "SPD " + round(v_spd,2) at (30,7).
+	print "HGT " + round(v_alt,2) at (30,9).
+	print "HDG " + round(v_hdg,2) at (30,12).
+	print "PIT " + round(v_pitch,2) at (30,13).
+	print "BNK " + round(v_bank, 2) at (30,14).
 
-	print "MET " + round(met, 2) at (0,0).
-	print "DT " + round(dt, 5) at (15,0).
+	print "MET " + round(met, 2) at (10,35).
+	print "DT " + round(dt, 5) at (0,37).
 	
-	print "MOD " + landing_step at (0,2).
-	print "BEAR " + round(heading_bearing,2) at (15,2).
+	print "MOD " + landing_step at (0,9).
+	print "BEAR " + round(heading_bearing,2) at (15,9).
 	
-	print "apref 7 " + ap_refresh at (30,10).
-	print "apcom 8 " + ap_mode at (30,11).
-	print "commod 9 " + command_mode at (30,12).
-	print "div " + round((SHIP:GEOPOSITION:LAT + 0.0405),2) at (30,13).
-	print "dist " + round((rnwy:distance),2) at (30,14).
+	print "apref 7 " + ap_refresh at (30,17).
+	print "apcom 8 " + ap_mode at (30,18).
+	print "commod 9 " + command_mode at (30,19).
+	print "div " + round((SHIP:GEOPOSITION:LAT + 0.0405),2) at (30,20).
+	print "dist " + round((rnwy:distance),2) at (30,21).
 	
+	print "   [1]" at (5,4).
+	print "[3][2][4]" at (5,5).
 	
+	if (command_speed) {
+		print "[SPEED]" at (5,1).
+	} else {
+		print "SPEED" at (5,1).
+	}. 
+	if (input_mode = 0) {
+		print ("[" + s_setpoint + "]") at (5,2).
+	} else {
+		print s_setpoint at (5,2).
+	}. 
+	
+	if (command_hdg) {
+		print "[HDG]" at (20,1).
+	} else {
+		print "HDG" at (20,1).
+	}. 
+	if (input_mode = 1) {
+		print ("[" + round(b_hdg_setpoint,2) + "]") at (20,2).
+	} else {
+		print round(b_hdg_setpoint,2) at (20,2).
+	}. 
+	
+	if (command_altitude) {
+		print "[ALTITUDE]" at (35,1).
+	} else {
+		print "ALTITUDE" at (35,1).
+	}. 
+	if (input_mode = 2) {
+		print ("[" + round(p_alt_setpoint,2) + "]") at (35,2).
+	} else {
+		print round(p_alt_setpoint,2) at (35,2).
+	}. 
+	
+	if (command_altitude) {
+		print "[VERT SPD]" at (35,4).
+	} else {
+		print "VERT SPD" at (35,4).
+	}. 
+	if (input_mode = 3) {
+		print ("[" + p_vsp_max + "]") at (35,5).
+	} else {
+		print p_vsp_max at (35,5).
+	}. 
 
-	if input_mode = 0 {
-		print "[SPD]      [ALT]    [HDG]" at (4,29).
-		print "[1]        [3]      [5]" at (5,31).
-		print s_setpoint at (5,33).
-		print round(p_alt_setpoint,2) at (15,33).
-		print round(b_hdg_setpoint,2) at (25,33).
-		print "[2]        [4]      [6]" at (5,35).
-	}.
-	if input_mode = 1 {
-		print "[VSP]      [BNK]" at (4,29).
-		print "[1]        [3]" at (5,31).
-		print p_vsp_max at (5,33).
-		print b_bnk_max at (15,33).
-		print "[2]        [4]" at (5,35).
-	}.
+	if (command_hdg) {
+		print "[BNK MAX]" at (20,4).
+	} else {
+		print "BNK MAX" at (20,4).
+	}. 
+	if (input_mode = 4) {
+		print ("[" + b_bnk_max + "]") at (20,5).
+	} else {
+		print b_bnk_max at (20,5).
+	}. 
+
+//	if input_mode = 0 {
+//		print "[SPD]      [ALT]    [HDG]" at (4,29).
+//		print "[1]        [3]      [5]" at (5,31).
+//		print s_setpoint at (5,33).
+//		print round(p_alt_setpoint,2) at (15,33).
+//		print round(b_hdg_setpoint,2) at (25,33).
+//		print "[2]        [4]      [6]" at (5,35).
+//	}.
+//	if input_mode = 1 {
+//		print "[VSP]      [BNK]" at (4,29).
+//		print "[1]        [3]" at (5,31).
+//		print p_vsp_max at (5,33).
+//		print b_bnk_max at (15,33).
+//		print "[2]        [4]" at (5,35).
+//	}.
 
 	
 	
