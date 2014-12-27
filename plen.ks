@@ -89,6 +89,7 @@ set s_lasterror to 0.
 
 print "Setting up User input.".
 
+set target_mode to false.
 set landing to false.					//boolean: overrides altitude control while flaring
 set landing_step to 3.					//int: used to keep track of landing progress. decrements from 3 (approaching ILS-2) to 0 (flaring).
 set ap_mode to 0. 						//int: waypoint or landing mode (AG 8)
@@ -245,6 +246,12 @@ until false {
 		if ag1_changed {set b_bnk_max to b_bnk_max + 5. toggle ag1_changed.}.
 		if ag2_changed {set b_bnk_max to b_bnk_max - 5. toggle ag2_changed.}.
 	}.
+	if input_mode = 5 { 
+		if ag5_changed {toggle landing. toggle ag5_changed.}.
+	}.
+	if input_mode = 6 { 
+		if ag5_changed {toggle target_mode. toggle ag5_changed.}.
+	}.
 	
 	if ag3_changed {
 		set input_mode to input_mode - 1. 
@@ -254,8 +261,8 @@ until false {
 		set input_mode to input_mode + 1. 
 		toggle ag4_changed.
 	}.
-	if input_mode > 4 {set input_mode to 0.}.
-	if input_mode < 0 {set input_mode to 4.}.
+	if input_mode > 6 {set input_mode to 0.}.
+	if input_mode < 0 {set input_mode to 6.}.
 	
 	if (command_mode = 0) {
 		set command_speed to false.
@@ -282,7 +289,6 @@ until false {
 	print "MET " + round(met, 2) at (10,35).
 	print "DT " + round(dt, 5) at (0,37).
 	
-	print "MOD " + landing_step at (0,9).
 	print "BEAR " + round(heading_bearing,2) at (15,9).
 	
 	print "apref 7 " + ap_refresh at (30,17).
@@ -291,11 +297,14 @@ until false {
 	print "div " + round((SHIP:GEOPOSITION:LAT + 0.0405),2) at (30,20).
 	print "dist " + round((rnwy:distance),2) at (30,21).
 	
-	print "   [1]" at (5,4).
-	print "[3][2][4]" at (5,5).
+	print "   [1]" at (5,8).
+	print "[3][5][4]" at (5,9).
+	print "   [2]" at (5,10).
+	
+	
 	
 	if (command_speed) {
-		print "[SPEED]" at (5,1).
+		print "*SPEED*" at (5,1).
 	} else {
 		print "SPEED" at (5,1).
 	}. 
@@ -306,7 +315,7 @@ until false {
 	}. 
 	
 	if (command_hdg) {
-		print "[HDG]" at (20,1).
+		print "*HDG*" at (20,1).
 	} else {
 		print "HDG" at (20,1).
 	}. 
@@ -317,7 +326,7 @@ until false {
 	}. 
 	
 	if (command_altitude) {
-		print "[ALTITUDE]" at (35,1).
+		print "*ALTITUDE*" at (35,1).
 	} else {
 		print "ALTITUDE" at (35,1).
 	}. 
@@ -328,7 +337,7 @@ until false {
 	}. 
 	
 	if (command_altitude) {
-		print "[VERT SPD]" at (35,4).
+		print "*VERT SPD*" at (35,4).
 	} else {
 		print "VERT SPD" at (35,4).
 	}. 
@@ -339,7 +348,7 @@ until false {
 	}. 
 
 	if (command_hdg) {
-		print "[BNK MAX]" at (20,4).
+		print "*BNK MAX*" at (20,4).
 	} else {
 		print "BNK MAX" at (20,4).
 	}. 
@@ -348,6 +357,33 @@ until false {
 	} else {
 		print b_bnk_max at (20,5).
 	}. 
+	
+	if (landing) {
+		print "*ILS*" at (14,4).
+		print "STEP " + landing_step at (14,5).
+		if (input_mode = 5) {
+			print "*[ILS]*" at (14,4).
+		}.
+	} else {
+		print "ILS" at (14,4).
+		if (input_mode = 5) {
+			print "[ILS]" at (14,4).
+		}.
+	}. 
+	
+	if (target_mode) {
+		print "*WPT*" at (3,4).
+		print "D " + round((tgt:distance/1000),1) + "k" at (3,5).
+		if (input_mode = 6) {
+			print "*[WPT]*" at (3,4).
+		}.
+	} else {
+		print "WPT" at (3,4).
+		if (input_mode = 6) {
+			print "[WPT]" at (3,4).
+		}.
+	}. 
+	
 
 //	if input_mode = 0 {
 //		print "[SPD]      [ALT]    [HDG]" at (4,29).
@@ -506,11 +542,9 @@ until false {
 //--------------------------------------------------
 
 	//output: applying calculated commands to plane surfaces
-	if not(command_mode = 0) {
-		set ship:control:pitch to c_command.
-		set ship:control:roll to b_command.
-		lock throttle to s_command.
-	}.
+	if command_altitude {set ship:control:pitch to c_command.}.
+	if command_hdg {set ship:control:roll to b_command.}.
+	if command_speed {lock throttle to s_command.}.
 
 //--------------------------------------------------
 
