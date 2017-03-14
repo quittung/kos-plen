@@ -5,6 +5,10 @@ kos-plen
 Attempt at an autopilot script for planes running kOS in Kerbal Space Program
 -----------------------------------------------------------------------------
 
+### Current State:
+ - Last real commit was back in December 2014.
+ - The code has not been tested with current versions of KSP and KOS.
+ - There are no plans to restart development.
 
 ### Goal:
   - Fully implement the most of the features of a modern passenger aircrafts autopilot.
